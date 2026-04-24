@@ -40,15 +40,50 @@ export function ResultsCards() {
     ? Math.round((forecast.upsidePotential / forecast.expectedRevenue) * 100)
     : 0;
 
+  const isLowSeason = benchmark.seasonalMultiplier < 0.5;
+  const isOffSeason = benchmark.seasonalMultiplier < 0.1;
+  const peakRevenue = isLowSeason && benchmark.peakMonthName
+    ? Math.round(forecast.expectedRevenue / benchmark.seasonalMultiplier)
+    : null;
+
   return (
     <div style={{ display: 'grid', gap: 20 }}>
+
+      {/* Seasonal warning */}
+      {isLowSeason && benchmark.peakMonthName && (
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: 14,
+          background: '#EFF6FF', border: '1px solid #BFDBFE',
+          borderRadius: 'var(--r-md)', padding: '16px 20px',
+        }}>
+          <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>❄️</span>
+          <div>
+            <div style={{ fontWeight: 700, color: '#1E40AF', marginBottom: 3 }}>
+              {isOffSeason ? 'Off-season' : 'Low season'} forecast — {benchmark.forecastMonthName}
+            </div>
+            <div style={{ fontSize: '0.87rem', color: '#1D4ED8', lineHeight: 1.5 }}>
+              {data.serviceType} demand is{' '}
+              {Math.round((1 - benchmark.seasonalMultiplier) * 100)}% below the annual average in{' '}
+              {benchmark.forecastMonthName}.{peakRevenue !== null && (
+                <> At peak season ({benchmark.peakMonthName}), a comparable business could expect
+                  around <strong>${peakRevenue.toLocaleString()}/mo</strong>.</>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero revenue */}
       <div className="result-hero">
         <div className="result-hero-eyebrow">Expected monthly revenue</div>
         <div className="result-hero-value">${Math.round(forecast.expectedRevenue).toLocaleString()}</div>
         <div className="result-hero-meta">
-          Based on 6,000 simulated scenarios for a {data.serviceType}{location ? ` in ${location}` : ''}
+          Based on 6,000 simulated scenarios for a {data.serviceType}{location ? ` in ${location}` : ''} &middot; {benchmark.forecastMonthName} forecast
+          {isLowSeason && benchmark.peakMonthName && (
+            <span style={{ color: '#1D4ED8', marginLeft: 6 }}>
+              (low season — peak in {benchmark.peakMonthName})
+            </span>
+          )}
         </div>
       </div>
 

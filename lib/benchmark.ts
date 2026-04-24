@@ -3,10 +3,11 @@ import { fetchCompetitionIndex, fetchLocalMarketStrength } from '@/lib/external/
 import { fetchGooglePlaceSignals } from '@/lib/external/googlePlaces';
 import { fetchPageSpeedSignals } from '@/lib/external/pagespeed';
 import { clamp, reviewFactor, websiteFactor } from '@/lib/scoring';
+import { getSeasonalMultiplier, getPeakMonthName, getMonthName } from '@/lib/seasonality';
 import type { BenchmarkProfile, ForecastInput } from '@/lib/types';
 
 export async function buildBenchmarkProfile(input: ForecastInput): Promise<BenchmarkProfile> {
-  const [marketMonthlyPrior, competitionIndexRaw, marketStrengthRaw, placeSignals, pageSignals] =
+  const [baseMarketPrior, competitionIndexRaw, marketStrengthRaw, placeSignals, pageSignals] =
     await Promise.all([
       fetchBlsMarketPrior(input.serviceType, input.state),
       fetchCompetitionIndex(input.serviceType, input.city, input.state),
@@ -15,13 +16,19 @@ export async function buildBenchmarkProfile(input: ForecastInput): Promise<Bench
       fetchPageSpeedSignals(input.websiteUrl),
     ]);
 
+  const currentMonth = new Date().getMonth(); // 0 = Jan
+  const seasonalMultiplier = getSeasonalMultiplier(input.serviceType, currentMonth);
+
+  // Adjust the annual-average prior to reflect this month's actual demand
+  const marketMonthlyPrior = baseMarketPrior * seasonalMultiplier;
+
   const reviewRatingUsed = placeSignals.rating ?? input.reviewRating;
-  const reviewCountUsed = placeSignals.reviewCount ?? input.reviewCount;
-  const pagespeedScore = pageSignals.pagespeedScore ?? null;
+  const reviewCountUsed  = placeSignals.reviewCount ?? input.reviewCount;
+  const pagespeedScore   = pageSignals.pagespeedScore ?? null;
 
   const competitionIndex = clamp(competitionIndexRaw, 0, 1);
-  const marketStrength = clamp(marketStrengthRaw, 0, 1);
-  const digitalStrength = clamp(
+  const marketStrength   = clamp(marketStrengthRaw, 0, 1);
+  const digitalStrength  = clamp(
     (reviewFactor(reviewRatingUsed, reviewCountUsed) - 0.9) * websiteFactor(pagespeedScore),
     0.75,
     1.35,
@@ -35,5 +42,8 @@ export async function buildBenchmarkProfile(input: ForecastInput): Promise<Bench
     reviewRatingUsed,
     reviewCountUsed,
     pagespeedScore,
+    seasonalMultiplier,
+    peakMonthName: getPeakMonthName(input.serviceType),
+    forecastMonthName: getMonthName(currentMonth),
   };
 }

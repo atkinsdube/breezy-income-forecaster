@@ -27,6 +27,9 @@ export interface BenchmarkProfile {
   reviewRatingUsed: number;
   reviewCountUsed: number;
   pagespeedScore: number | null;
+  seasonalMultiplier: number;
+  peakMonthName: string | null;
+  forecastMonthName: string;
 }
 
 export interface ForecastResult {
