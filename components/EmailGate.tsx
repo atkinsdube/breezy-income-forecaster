@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
 interface EmailGateProps {
   serviceType: string;
+  teaserRange?: { low: number; high: number };
   onSubmit: (email: string) => void;
 }
 
-export function EmailGate({ serviceType, onSubmit }: EmailGateProps) {
+export function EmailGate({ serviceType, teaserRange, onSubmit }: EmailGateProps) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
@@ -25,12 +25,22 @@ export function EmailGate({ serviceType, onSubmit }: EmailGateProps) {
 
   return (
     <div className="email-gate">
-      <img src="/analyst.svg" alt="Forecast ready" style={{ width: 120, margin: '0 auto' }} />
-      <h3>Your forecast is ready</h3>
+      {teaserRange && (
+        <div className="email-gate-teaser" style={{ width: '100%' }}>
+          <div className="email-gate-teaser-label">Your {serviceType} forecast is ready</div>
+          <div className="email-gate-teaser-value">
+            ${Math.round(teaserRange.low).toLocaleString()} – ${Math.round(teaserRange.high).toLocaleString()}
+            <span style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--primary-mid)', marginLeft: 6 }}>/mo likely range</span>
+          </div>
+        </div>
+      )}
+
+      <h3>Unlock your full results</h3>
       <p>
-        Enter your email and we&apos;ll send you the full {serviceType} revenue breakdown — plus
-        a free guide on the top levers to grow your monthly income.
+        Enter your email to see your expected revenue, market benchmark, upside opportunity,
+        and personalized improvement plan — free.
       </p>
+
       <div className="email-row">
         <Input
           type="email"
@@ -40,12 +50,14 @@ export function EmailGate({ serviceType, onSubmit }: EmailGateProps) {
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           autoFocus
         />
-        <Button onClick={handleSubmit}>See my forecast</Button>
+        <button className="btn btn-primary" onClick={handleSubmit} style={{ whiteSpace: 'nowrap' }}>
+          See results →
+        </button>
       </div>
+
       {error && <div className="email-error">{error}</div>}
-      <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
-        No spam. Unsubscribe anytime.
-      </p>
+      <div className="email-fine-print">No spam &middot; Unsubscribe anytime &middot; Takes 2 seconds</div>
     </div>
   );
 }
+

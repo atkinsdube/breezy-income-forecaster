@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 
 const stages = [
-  'Finding similar businesses in your market',
+  'Pulling market benchmarks for your trade',
   'Estimating local demand and competition',
-  'Analyzing reviews and digital presence',
-  'Running thousands of revenue simulations',
+  'Scoring your digital presence signals',
+  'Running 6,000 revenue simulations',
 ];
 
 export function LoadingStage() {
@@ -15,7 +15,7 @@ export function LoadingStage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % stages.length);
-    }, 1200);
+    }, 1300);
     return () => clearInterval(interval);
   }, []);
 
@@ -23,10 +23,13 @@ export function LoadingStage() {
 
   return (
     <div className="loading-wrap">
-      <img src="/analyst.svg" alt="AI analyst illustration" />
+      <img src="/analyst.svg" alt="Analyzing" />
       <div>
-        <h3 style={{ marginBottom: 8 }}>Building your forecast</h3>
-        <div className="loading-stage">{text}...</div>
+        <div className="loading-title">Building your forecast</div>
+        <div className="loading-stage-row">
+          <div className="loading-spinner" />
+          <span>{text}...</span>
+        </div>
       </div>
     </div>
   );

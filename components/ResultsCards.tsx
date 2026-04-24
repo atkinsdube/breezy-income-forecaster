@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/Card';
 import { ForecastChart } from '@/components/ForecastChart';
 import { BreezyCta } from '@/components/BreezyCta';
 import type { BenchmarkProfile, ForecastResult } from '@/lib/types';
@@ -10,6 +9,9 @@ interface StoredForecast {
   forecast: ForecastResult;
   benchmark: BenchmarkProfile;
   email: string;
+  serviceType: string;
+  city: string;
+  state: string;
 }
 
 export function ResultsCards() {
@@ -20,71 +22,118 @@ export function ResultsCards() {
       const raw = sessionStorage.getItem('breezy_forecast');
       if (raw) setData(JSON.parse(raw) as StoredForecast);
     } catch {
-      // ignore parse errors
+      // ignore
     }
   }, []);
 
   if (!data) {
     return (
-      <Card>No forecast data found. Please go back and run the forecast again.</Card>
+      <div className="card" style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
+        No forecast found. <a href="/" style={{ color: 'var(--primary)', fontWeight: 600 }}>Run the forecast again →</a>
+      </div>
     );
   }
 
   const { forecast, benchmark } = data;
+  const location = [data.city, data.state].filter(Boolean).join(', ');
+  const upsidePct = forecast.expectedRevenue > 0
+    ? Math.round((forecast.upsidePotential / forecast.expectedRevenue) * 100)
+    : 0;
 
   return (
-    <div className="grid">
-      <div className="kpi-grid">
-        <div className="kpi">
-          <div className="eyebrow">Expected monthly revenue</div>
-          <div className="value">${Math.round(forecast.expectedRevenue).toLocaleString()}</div>
-        </div>
-        <div className="kpi">
-          <div className="eyebrow">Likely range</div>
-          <div className="value">
-            ${Math.round(forecast.lowRevenue).toLocaleString()} &ndash; $
-            {Math.round(forecast.highRevenue).toLocaleString()}
-          </div>
-        </div>
-        <div className="kpi">
-          <div className="eyebrow">Forecast confidence</div>
-          <div className="value">{forecast.confidenceLabel}</div>
-        </div>
-        <div className="kpi">
-          <div className="eyebrow">Market benchmark</div>
-          <div className="value">${Math.round(benchmark.marketMonthlyPrior).toLocaleString()}</div>
+    <div style={{ display: 'grid', gap: 20 }}>
+
+      {/* Hero revenue */}
+      <div className="result-hero">
+        <div className="result-hero-eyebrow">Expected monthly revenue</div>
+        <div className="result-hero-value">${Math.round(forecast.expectedRevenue).toLocaleString()}</div>
+        <div className="result-hero-meta">
+          Based on 6,000 simulated scenarios for a {data.serviceType}{location ? ` in ${location}` : ''}
         </div>
       </div>
 
-      <div className="grid grid-2">
-        <Card>
-          <h3>Revenue scenarios</h3>
+      {/* KPI row */}
+      <div className="kpi-row">
+        <div className="kpi">
+          <div className="kpi-label">Likely range</div>
+          <div className="kpi-value">
+            ${Math.round(forecast.lowRevenue).toLocaleString()} &ndash; ${Math.round(forecast.highRevenue).toLocaleString()}
+          </div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Forecast confidence</div>
+          <div className={`kpi-value${forecast.confidenceLabel === 'Higher' ? ' good' : forecast.confidenceLabel === 'Lower' ? ' warn' : ''}`}>
+            {forecast.confidenceLabel}
+          </div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Market benchmark</div>
+          <div className="kpi-value">${Math.round(benchmark.marketMonthlyPrior).toLocaleString()}</div>
+        </div>
+      </div>
+
+      {/* Upside banner */}
+      {forecast.upsidePotential > 200 && (
+        <div className="upside-banner">
+          <div className="upside-icon">💡</div>
+          <div>
+            <div className="upside-title">
+              ~${Math.round(forecast.upsidePotential).toLocaleString()}/mo left on the table
+            </div>
+            <div className="upside-desc">
+              Businesses like yours can earn roughly {upsidePct}% more by improving response speed,
+              after-hours coverage, and review count. The gaps are listed below.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chart + recommendations */}
+      <div className="results-grid">
+        <div className="card">
+          <div className="section-title">Revenue scenarios</div>
           <ForecastChart
             low={forecast.lowRevenue}
             expected={forecast.expectedRevenue}
             high={forecast.highRevenue}
           />
-        </Card>
+        </div>
 
-        <Card>
-          <h3>Top improvement levers</h3>
-          <ul className="list">
-            {forecast.recommendations.map((item: string) => (
-              <li key={item} style={{ marginBottom: 8 }}>
+        <div className="card">
+          <div className="section-title">Top improvement levers</div>
+          <ul className="rec-list">
+            {forecast.recommendations.map((item, i) => (
+              <li key={item} className="rec-item">
+                <span className="rec-bullet">{i + 1}</span>
                 {item}
               </li>
             ))}
           </ul>
-          <h3 style={{ marginTop: 20 }}>Signals used</h3>
-          <ul className="list">
-            <li>Competition index: {benchmark.competitionIndex.toFixed(2)}</li>
-            <li>Digital strength score: {benchmark.digitalStrength.toFixed(2)}</li>
-            <li>Market strength score: {benchmark.marketStrength.toFixed(2)}</li>
-          </ul>
-        </Card>
+
+          <div className="section-title" style={{ marginTop: 24 }}>Market signals</div>
+          <div className="signals-list">
+            {[
+              { label: 'Competition', val: benchmark.competitionIndex, pct: benchmark.competitionIndex },
+              { label: 'Market strength', val: benchmark.marketStrength, pct: benchmark.marketStrength },
+              { label: 'Digital strength', val: benchmark.digitalStrength, pct: Math.min(1, (benchmark.digitalStrength - 0.75) / 0.6) },
+            ].map(({ label, val, pct }) => (
+              <div key={label} className="signal-row">
+                <span className="signal-label">{label}</span>
+                <div className="signal-bar-wrap">
+                  <div className="signal-bar-track">
+                    <div className="signal-bar-fill" style={{ width: `${Math.round(pct * 100)}%` }} />
+                  </div>
+                  <span className="signal-val">{val.toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
+      {/* Breezy CTA */}
       <BreezyCta recommendations={forecast.recommendations} />
+
     </div>
   );
 }

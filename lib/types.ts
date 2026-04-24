@@ -36,4 +36,5 @@ export interface ForecastResult {
   highRevenue: number;
   confidenceLabel: string;
   recommendations: string[];
+  upsidePotential: number;
 }
