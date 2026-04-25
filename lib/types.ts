@@ -19,6 +19,18 @@ export interface ForecastInput {
   reviewCount: number;
 }
 
+export type TrendDirection = 'rising' | 'stable' | 'declining';
+
+export interface MarketTrend {
+  shortTermDirection: TrendDirection;
+  shortTermPct: number;
+  shortTermLabel: string;
+  longTermPct: number;
+  longTermLabel: string;
+  longTermDesc: string;
+  dataFresh: boolean;
+}
+
 export interface BenchmarkProfile {
   marketMonthlyPrior: number;
   competitionIndex: number;
@@ -28,8 +40,12 @@ export interface BenchmarkProfile {
   reviewCountUsed: number;
   pagespeedScore: number | null;
   seasonalMultiplier: number;
+  geoScale: number;
+  totalSeasonalFactor: number;
   peakMonthName: string | null;
   forecastMonthName: string;
+  forecastMonth: number;
+  trend: MarketTrend;
 }
 
 export interface ForecastResult {

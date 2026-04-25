@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ForecastChart } from '@/components/ForecastChart';
 import { BreezyCta } from '@/components/BreezyCta';
 import { OptimizationInsights } from '@/components/OptimizationInsights';
+import { MarketTrends } from '@/components/MarketTrends';
 import type { BenchmarkProfile, ForecastInput, ForecastResult } from '@/lib/types';
 
 interface StoredForecast {
@@ -167,6 +168,15 @@ export function ResultsCards() {
           </div>
         </div>
       </div>
+
+      {/* Market intelligence */}
+      <MarketTrends
+        serviceType={data.serviceType}
+        state={data.state}
+        city={data.city}
+        forecast={forecast}
+        benchmark={benchmark}
+      />
 
       {/* Optimisation analysis */}
       {data.input && (
