@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { ForecastChart } from '@/components/ForecastChart';
 import { BreezyCta } from '@/components/BreezyCta';
-import type { BenchmarkProfile, ForecastResult } from '@/lib/types';
+import { OptimizationInsights } from '@/components/OptimizationInsights';
+import type { BenchmarkProfile, ForecastInput, ForecastResult } from '@/lib/types';
 
 interface StoredForecast {
   forecast: ForecastResult;
   benchmark: BenchmarkProfile;
+  input: ForecastInput;
   email: string;
   serviceType: string;
   city: string;
@@ -165,6 +167,11 @@ export function ResultsCards() {
           </div>
         </div>
       </div>
+
+      {/* Optimisation analysis */}
+      {data.input && (
+        <OptimizationInsights input={data.input} benchmark={benchmark} forecast={forecast} />
+      )}
 
       {/* Breezy CTA */}
       <BreezyCta recommendations={forecast.recommendations} />

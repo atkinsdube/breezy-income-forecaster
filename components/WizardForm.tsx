@@ -79,7 +79,7 @@ export function WizardForm() {
 
   function handleEmailSubmit(email: string) {
     if (!payload) return;
-    sessionStorage.setItem('breezy_forecast', JSON.stringify({ ...payload, email, serviceType: form.serviceType, city: form.city, state: form.state }));
+    sessionStorage.setItem('breezy_forecast', JSON.stringify({ ...payload, email, input: form, serviceType: form.serviceType, city: form.city, state: form.state }));
     router.push('/results');
   }
 
